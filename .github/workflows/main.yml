@@ -1,47 +1,42 @@
-name: CI_CD-Pipeline
+name: CI-CD-Pipeline
+
 on:
-    push:
-      branches: ["main"]
+  push:
+    branches: ["main"]
 
 jobs:
-  code-checkout-devops: 
-    runs-on: ubuntu@latest
+  build-test-deploy:
+    runs-on: ubuntu-latest
 
     steps:
-     - name: Checkout Code
-       uses: actions/checkout@v3
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-     - name: Build Docker Image
-       run: docker build -t demo-app .
+    - name: Build Docker Image
+      run: docker build -t demo-app .
 
-     - name: Writing to Test Console
-       run: echo "Test Passed Successfully"
+    - name: Dummy Test
+      run: echo "Tests passed successfully!"
 
-     - name: Login to Docker Hub
-       uses: docker/login-action@v2
-       with:
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-     - name: Push to Docker Image
-       run: 
+    - name: Push Docker Image
+      run: |
         docker tag demo-app ${{ secrets.DOCKER_USERNAME }}/demo-app:latest
-        docker push ${{ secrets.DOCKER_USERNAME }}/demo-app:latest 
+        docker push ${{ secrets.DOCKER_USERNAME }}/demo-app:latest
 
-     - name: Deploy to AWS EC2
-       uses: appleby/ssh-action@v1.0.3
-       with:
-        username : ec2-user
-        key: ${{ secrets.SSH_KEY }}
-        host: ${{ secrets.HOST_NAME }}
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ec2-user
+        key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           docker pull ${{ secrets.DOCKER_USERNAME }}/demo-app:latest
           docker stop demo || true
           docker rm demo || true
-          docker run -d -p 80:80 --name demo ${{ secrets.DOCKER_USERNAME }}/demo-app:latest
-
-
-
-       
-    
-
+          docker run -d -p 80:80 --name demo ${{ secrets.DOCKER_USERNAME }}/demo-app-ci-cd:latest
