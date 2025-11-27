@@ -39,4 +39,4 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/demo-app:latest
             docker stop demo || true
             docker rm demo || true
-            docker run -d -p 80:80 --name demo ${{ secrets.DOCKER_USERNAME }}/demo-app-ci-cd:latest
+            docker run -d -p 80:80 --name demo ${{ secrets.DOCKER_USERNAME }}/demo-app:latest
